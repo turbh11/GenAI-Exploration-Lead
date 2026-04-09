@@ -13,6 +13,10 @@ import time
 # Import settings and static lookup data from the external file
 import config
 
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, 'products.csv')
+
 # Initialize the FastAPI server
 app = FastAPI(
     title="Zap Group Entity Resolution API",
@@ -178,7 +182,7 @@ def get_raw_data():
     operation: Returns the original parsed CSV data to display on the frontend.
     """
     try:
-        raw_data = load_data_from_csv('products.csv')
+        raw_data = load_data_from_csv(CSV_PATH)
         return {"data": raw_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -187,7 +191,7 @@ def get_raw_data():
 def get_buckets_keys():
     """מחזיר רק את רשימת הקטגוריות כדי שהדפדפן יוכל לבקש אותן אחת-אחת"""
     try:
-        raw_data = load_data_from_csv('products.csv')
+        raw_data = load_data_from_csv(CSV_PATH)
         category_buckets = extract_brand_and_group(raw_data)
         return {"keys": list(category_buckets.keys())}
     except Exception as e:
@@ -200,7 +204,7 @@ def resolve_single_bucket(bucket_name: str):
          raise HTTPException(status_code=500, detail="GEMINI_API_KEY is missing.")
 
     try:
-        raw_data = load_data_from_csv('products.csv')
+        raw_data = load_data_from_csv(CSV_PATH)
         category_buckets = extract_brand_and_group(raw_data)
         
         items = category_buckets.get(bucket_name, [])
@@ -234,7 +238,7 @@ def run_resolution_pipeline_core(verbose: bool = False) -> Dict[str, Any]:
         raise RuntimeError("GEMINI_API_KEY is missing.")
 
     started_at = time.time()
-    raw_data = load_data_from_csv('products.csv')
+    raw_data = load_data_from_csv(CSV_PATH)
     category_buckets = extract_brand_and_group(raw_data)
 
     final_api_response = {}
