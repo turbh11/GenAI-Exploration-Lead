@@ -111,7 +111,7 @@ def group_products_with_gemini(products_data: List[Dict], bucket_name: str) -> d
     # שימוש בתחביר של הספרייה החדשה google-genai
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash', 
+            model='gemini-2.5-flash-lite', 
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
