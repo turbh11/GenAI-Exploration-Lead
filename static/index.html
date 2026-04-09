@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zap GenAI - Entity Resolution</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: #0033a0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .btn-header {
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-cv {
+            background-color: #ffffff;
+            color: #0033a0;
+            border: 2px solid #ffffff;
+        }
+        
+        .btn-cv:hover {
+            background-color: #e6e6e6;
+        }
+        
+        .btn-github {
+            background-color: #333;
+            color: white;
+            border: 2px solid #333;
+        }
+        
+        .btn-github:hover {
+            background-color: #555;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        /* סגנונות לטבלת הנתונים המקורית */
+        
+        .raw-data-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+        
+        .raw-data-section h2 {
+            color: #0033a0;
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: right;
+        }
+        
+        th {
+            background-color: #0033a0;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        /* כפתורים וטעינה */
+        
+        .btn-run {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 30px auto;
+            padding: 15px;
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(255, 107, 0, 0.3);
+        }
+        
+        .btn-run:hover {
+            background-color: #e65c00;
+            transform: translateY(-2px);
+        }
+        
+        .btn-run:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            background-color: #e6f2ff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #b3d9ff;
+            color: #0033a0;
+            margin-bottom: 30px;
+        }
+        
+        .loader p {
+            margin: 5px 0;
+        }
+        
+        .loader .disclaimer {
+            font-size: 14px;
+            color: #555;
+        }
+        /* תוצאות AI */
+        
+        .category-block {
+            margin-bottom: 40px;
+        }
+        
+        .category-title {
+            border-bottom: 2px solid #0033a0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #0033a0;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-right: 5px solid #0033a0;
+            transition: transform 0.2s;
+        }
+        
+        .product-card:hover {
+            transform: translateX(-5px);
+        }
+        
+        .product-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+        
+        .product-price {
+            font-size: 24px;
+            color: #28a745;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+        
+        .sources {
+            font-size: 14px;
+            color: #666;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Zap Group - GenAI Engine</h1>
+        <p>Entity Resolution PoC | By Barak Ben Acon</p>
+        <div class="header-actions">
+            <a href="https://github.com/YOUR_GITHUB_USERNAME" target="_blank" class="btn-header btn-github">
+                💻 צפה בקוד ב-GitHub
+            </a>
+            <a href="/static/Barak_Ben_Acon_Resume.pdf" download="Barak_Ben_Acon_CV.pdf" id="cvBtn" class="btn-header btn-cv" onclick="handleCVDownload(event)">
+                📄 הורד קורות חיים
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="raw-data-section">
+            <h2>מאגר המוצרים הגולמי (לפני עיבוד)</h2>
+            <p>כך נראים הנתונים המגיעים מהחנויות השונות - שמות לא אחידים, כפילויות, ואנגלית מעורבבת עם עברית.</p>
+            <div class="table-container">
+                <table id="rawDataTable">
+                    <thead>
+                        <tr>
+                            <th>שם המוצר</th>
+                            <th>מחיר (₪)</th>
+                            <th>קטגוריה</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button id="runBtn" class="btn-run" onclick="runAI()">🚀 הפעל את מנוע ה-AI לזיהוי ואיחוד</button>
+
+        <div id="loader" class="loader">
+            <p><strong>⏳ מנתח נתונים בעזרת Gemini API...</strong></p>
+            <p class="disclaimer">התהליך עשוי לקחת כדקה וחצי. אנו מבצעים השהייה בין חבילות נתונים כדי לעמוד במגבלות העומס (Rate Limits) של ה-API.</p>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // פונקציה שמביאה את הנתונים ברגע שהדף נטען
+        window.onload = async function() {
+            try {
+                const response = await fetch('/raw-data');
+                const data = await response.json();
+
+                const tbody = document.querySelector('#rawDataTable tbody');
+                data.data.forEach(item => {
+                    const row = `<tr>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${item.price}</td>
+                        <td>${item.category}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Failed to load raw data", error);
+            }
+        };
+
+        function handleCVDownload(event) {
+            const btn = document.getElementById('cvBtn');
+            const originalText = btn.innerHTML;
+            const originalBg = btn.style.backgroundColor;
+            const originalColor = btn.style.color;
+
+            btn.innerHTML = '✅ הקובץ ירד בהצלחה!';
+            btn.style.backgroundColor = '#28a745';
+            btn.style.color = 'white';
+            btn.style.borderColor = '#28a745';
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.backgroundColor = originalBg;
+                btn.style.color = originalColor;
+                btn.style.borderColor = '#ffffff';
+            }, 3000);
+        }
+
+        async function runAI() {
+            const btn = document.getElementById('runBtn');
+            const loader = document.getElementById('loader');
+            const resultsDiv = document.getElementById('results');
+
+            btn.disabled = true;
+            loader.style.display = 'block';
+            resultsDiv.innerHTML = '<h2>תוצאות האיחוד</h2>';
+
+            try {
+                // 1. קבלת רשימת הקטגוריות מהשרת
+                loader.innerHTML = '<p><strong>מנתח את מבנה הנתונים...</strong></p>';
+                const keysResponse = await fetch('/get-buckets-keys');
+                const keysData = await keysResponse.json();
+                const buckets = keysData.keys;
+
+                // 2. מעבר על כל קטגוריה ועיבוד שלה בנפרד מול ה-AI
+                for (let i = 0; i < buckets.length; i++) {
+                    const bucket = buckets[i];
+
+                    // עדכון טקסט הטעינה למשתמש
+                    loader.innerHTML = `<p><strong>⏳ מעבד את קטגוריה: ${bucket} (${i + 1} מתוך ${buckets.length})...</strong></p>
+                                        <p class="disclaimer">ממתין בין בקשות כדי לכבד את מגבלות ה-API.</p>`;
+
+                    // שליחת בקשה לעיבוד הקטגוריה הספציפית
+                    const response = await fetch(`/resolve-bucket/${bucket}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) throw new Error(data.detail || 'שגיאה בשרת');
+
+                    // ציור התוצאות למסך מיד כשהן מגיעות
+                    let htmlContent = `<div class="category-block" style="animation: fadeIn 0.5s;">
+                                        <h3 class="category-title">קטגוריה: ${bucket}</h3>`;
+
+                    data.results.forEach(item => {
+                        htmlContent += `
+                            <div class="product-card">
+                                <h3 class="product-name">${item.canonical_name}</h3>
+                                <p class="product-price">🔥 מחיר משתלם: ${item.lowest_price_ils} ₪ <span style="font-size:14px; color:#555;">(נמצא ב: ${item.best_deal_source})</span></p>
+                                <div class="sources"><strong>מוצרים שאוחדו:</strong> ${item.original_listings_merged.join(' | ')}</div>
+                            </div>
+                        `;
+                    });
+                    htmlContent += `</div>`;
+
+                    // הוספה למסך הקיים בלי למחוק את הקודמים
+                    resultsDiv.innerHTML += htmlContent;
+
+                    // 3. מנגנון Rate Limit - המתנה של 5 שניות לפני הבקשה הבאה (מלבד האחרונה)
+                    if (i < buckets.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
+                loader.innerHTML = '<p style="color: green;"><strong>✅ העיבוד הושלם בהצלחה!</strong></p>';
+
+            } catch (error) {
+                loader.innerHTML = `<p style="color: red; text-align: center;">שגיאה: ${error.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
