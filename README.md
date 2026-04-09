@@ -1,3 +1,9 @@
+## Quick Access (Live Demo)
+For fast evaluation without local setup or API configuration, open the deployed app:
+
+**Live URL:** https://genai-exploration-lead.onrender.com/
+
+> Note: The first request on Render may take a few seconds if the service is waking up.
 ## Project Overview
 This project demonstrates an AI-driven, highly scalable approach to **Entity Resolution** (resolving unstructured and inconsistent e-commerce product names). The goal is to group identical products despite variations in naming, typos, or cross-language inputs, and display the lowest price for each unified product.
 
